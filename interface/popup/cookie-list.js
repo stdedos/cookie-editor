@@ -159,6 +159,38 @@
             }
         }
 
+        function cookiesAsJSON() {
+            var exportedCookies = [];
+            for (var cookieId in loadedCookies) {
+                var exportedCookie = loadedCookies[cookieId].cookie;
+                exportedCookie.storeId = null;
+                if (exportedCookie.sameSite === 'unspecified') {
+                    exportedCookie.sameSite = null;
+                }
+                exportedCookies.push(exportedCookie);
+            }
+
+            return JSON.stringify(exportedCookies, null, 4);
+        }
+
+        function cookiesAsNetscape() {
+            var netscapeCookies = '# Netscape HTTP Cookie File';
+
+            for (var cookieId in loadedCookies) {
+                let cookie = loadedCookies[cookieId].cookie;
+                let secure = cookie.secure.toString().toUpperCase();
+                let expiration;
+
+                if (!cookie.session && !!cookie.expirationDate)
+                    expiration = cookie.expirationDate.parseInt();
+
+                let line = `${cookie.domain}	TRUE	${cookie.path}	${secure}	${expiration}	${cookie.name}	${cookie.value}`
+                netscapeCookies += line;
+            }
+
+            return netscapeCookies;
+        }
+
         if (containerCookie) {
             containerCookie.addEventListener('click', e => {
                 let target = e.target;
@@ -225,17 +257,7 @@
 
             buttonIcon.setAttribute("href", "../sprites/solid.svg#check");
 
-            var exportedCookies = [];
-            for (var cookieId in loadedCookies) {
-                var exportedCookie = loadedCookies[cookieId].cookie;
-                exportedCookie.storeId = null;
-                if (exportedCookie.sameSite === 'unspecified') {
-                    exportedCookie.sameSite = null;
-                }
-                exportedCookies.push(exportedCookie);
-            }
-
-            copyText(JSON.stringify(exportedCookies, null, 4));
+            copyText(cookiesAsJSON());
 
             sendNotification('Cookies exported to clipboard');
             setTimeout(() => {
